@@ -1,14 +1,3 @@
-package com.jojodmo.safeNBT.api;
-
-import com.jojodmo.safeNBT.Main;
-import io.netty.util.internal.UnstableApi;
-import org.bukkit.Bukkit;
-import org.bukkit.inventory.ItemStack;
-
-
-import java.lang.reflect.Method;
-import java.util.Map;
-
 /*
 
    Copyright 2019 jojodmo
@@ -26,6 +15,17 @@ import java.util.Map;
    limitations under the License.
 
 */
+
+package com.jojodmo.safeNBT.api;
+
+import com.jojodmo.safeNBT.Main;
+import io.netty.util.internal.UnstableApi;
+import org.bukkit.Bukkit;
+import org.bukkit.inventory.ItemStack;
+
+
+import java.lang.reflect.Method;
+import java.util.Map;
 
 public class SafeNBT{
 
