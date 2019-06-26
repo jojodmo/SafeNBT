@@ -67,6 +67,20 @@ public class SafeNBTList{
         this.tagList = toSet;
     }
 
+    public boolean isEmpty(){
+        try{
+            Method m = tagListClass.getMethod("isEmpty");
+            m.setAccessible(true);
+            Object r = m.invoke(this.tagList);
+            m.setAccessible(false);
+            return r instanceof Boolean ? (Boolean) r : true;
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+            return true;
+        }
+    }
+
     public void add(SafeNBT value){
         add(value.getTagCompund());
     }
@@ -92,6 +106,4 @@ public class SafeNBTList{
             ex.printStackTrace();
         }
     }
-
-
 }
