@@ -87,6 +87,20 @@ public class SafeNBT{
         }
     }
 
+    public SafeNBTList getList(String key){
+        try{
+            Method m = tagCompoundClass.getMethod("get", String.class);
+            m.setAccessible(true);
+            Object r = m.invoke(this.tagCompund, key);
+            m.setAccessible(false);
+            return r == null ? null : new SafeNBTList(r);
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+            return null;
+        }
+    }
+
     public String getString(String key){
         try{
             Method m = tagCompoundClass.getMethod("getString", String.class);
