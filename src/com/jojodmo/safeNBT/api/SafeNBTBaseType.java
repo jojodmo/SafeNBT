@@ -47,6 +47,18 @@ public enum SafeNBTBaseType{
         catch(Exception ex){ex.printStackTrace();}
     }
 
+    public static SafeNBTBaseType get(Class<?> clazz){
+        for(SafeNBTBaseType type : values()){
+            if(type.innerClazz.equals(clazz)){
+                return type;
+            }
+        }
+
+        if(clazz == Float.class){return FLOAT;}
+        else if(clazz == Integer.class){return INT;}
+        return null;
+    }
+
     public <T> Object make(T value){
         try{
             Constructor m = nbtBaseClass.getConstructor(innerClazz);
