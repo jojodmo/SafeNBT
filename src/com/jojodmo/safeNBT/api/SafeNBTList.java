@@ -95,6 +95,20 @@ public class SafeNBTList{
         }
     }
 
+    public <T> void addGeneric(T value){
+        if(value == null){return;}
+        SafeNBTBaseType type = SafeNBTBaseType.get(value.getClass());
+        if(type == null){return;}
+        add(type, value);
+    }
+
+    public <T> void add(T... values){
+        SafeNBTBaseType type = values.length > 0 ? SafeNBTBaseType.getByClass(values[0].getClass()) : null;
+        if(type != null){
+            add(type, values);
+        }
+    }
+
     private void add(Object nbt){
         try{
             Method m = AbstractList.class.getMethod("add", Object.class);
