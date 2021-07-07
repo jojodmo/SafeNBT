@@ -26,28 +26,37 @@ import org.bukkit.inventory.ItemStack;
 
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class SafeNBT{
 
     private static final String version = "net.minecraft.server." + Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
     private static final String cbVersion = "org.bukkit.craftbukkit." + Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-    private static Class<?> tagCompoundClass;
+    static Class<?> tagCompoundClass;
     private static Class<?> nbtBaseClass;
     private static Class<?> nmsItemstackClass;
     private static Class<?> craftItemstackClass;
+    static Class<?> mojangsonParserClass;
 
     private final Object tagCompund;
 
     static{
         try{
-            tagCompoundClass = Class.forName(version + ".NBTTagCompound");
-            nbtBaseClass = Class.forName(version + ".NBTBase");
-            nmsItemstackClass = Class.forName(version + ".ItemStack");
+            if(Main.greaterOrEqual(1, 17)){
+                tagCompoundClass = Class.forName("net.minecraft.nbt.NBTTagCompound");
+                nbtBaseClass = Class.forName("net.minecraft.nbt.NBTBase");
+                nmsItemstackClass = Class.forName("net.minecraft.world.item.ItemStack");
+                mojangsonParserClass = Class.forName("net.minecraft.nbt.MojangsonParser");
+            }
+            else{
+                tagCompoundClass = Class.forName(version + ".NBTTagCompound");
+                nbtBaseClass = Class.forName(version + ".NBTBase");
+                nmsItemstackClass = Class.forName(version + ".ItemStack");
+                mojangsonParserClass = Class.forName(version + ".MojangsonParser");
+            }
             craftItemstackClass = Class.forName(cbVersion + ".inventory.CraftItemStack");
         }
         catch(Exception ex){
@@ -382,6 +391,42 @@ public class SafeNBT{
             ex.printStackTrace();
             return null;
         }
+    }
+
+    public Set<String> getKeys(){
+        try{
+            Map m = null;
+            if(Main.greaterOrEqual(1, 17)){
+                try{
+                    Field f = tagCompoundClass.getDeclaredField("x");
+                    f.setAccessible(true);
+                    m = (Map) f.get(tagCompund);
+                    f.setAccessible(false);
+                }
+                catch(Exception ignore){}
+                for(Field f : tagCompoundClass.getDeclaredFields()){
+                    if(f.getType() == Map.class){
+                        f.setAccessible(true);
+                        m = (Map) f.get(tagCompund);
+                        f.setAccessible(false);
+                        break;
+                    }
+                }
+            }
+            else{
+                Field f = tagCompoundClass.getDeclaredField("map");
+                f.setAccessible(true);
+                m = (Map) f.get(tagCompund);
+                f.setAccessible(false);
+            }
+
+            return (Set<String>) m.keySet();
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+            return new HashSet<>();
+        }
+
     }
 
     public String toString(){

@@ -22,8 +22,11 @@ import com.jojodmo.safeNBT.Main;
 import io.netty.util.internal.UnstableApi;
 import org.bukkit.Bukkit;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.AbstractList;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SafeNBTList{
 
@@ -33,11 +36,24 @@ public class SafeNBTList{
     private static Class<?> nbtBaseClass;
 
     private final Object tagList;
+    private static final List<Method> getMethods = new ArrayList<>();
 
     static{
         try{
-            tagListClass = Class.forName(version + ".NBTTagList");
-            nbtBaseClass = Class.forName(version + ".NBTBase");
+            if(Main.greaterOrEqual(1, 17)){
+                tagListClass = Class.forName("net.minecraft.nbt.NBTTagList");
+                nbtBaseClass = Class.forName("net.minecraft.nbt.NBTBase");
+            }
+            else{
+                tagListClass = Class.forName(version + ".NBTTagList");
+                nbtBaseClass = Class.forName(version + ".NBTBase");
+            }
+
+            for(Method m : tagListClass.getDeclaredMethods()){
+                if(m.getReturnType().equals(Void.TYPE) || m.getParameterCount() != 1 || !m.getParameterTypes()[0].equals(int.class)){continue;}
+                if(m.getName().equalsIgnoreCase("remove")){continue;}
+                getMethods.add(m);
+            }
         }
         catch(Exception ex){
             ex.printStackTrace();
@@ -78,6 +94,68 @@ public class SafeNBTList{
         catch(Exception ex){
             ex.printStackTrace();
             return true;
+        }
+    }
+
+    public int size(){
+        try{
+            Method m = tagListClass.getMethod("size");
+            m.setAccessible(true);
+            Object r = m.invoke(this.tagList);
+            m.setAccessible(false);
+            return (Integer) r;
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+            return 0;
+        }
+    }
+
+    public List<Object> values(){
+        try{
+            List<Object> res = new ArrayList<>();
+
+            for(int i = 0; i < size(); i++){
+                Object o = null;
+                for(Method m : getMethods){
+                    m.setAccessible(true);
+                    o = m.invoke(this.tagList, i);
+                    m.setAccessible(false);
+                    if(o != null){
+                        if(o instanceof Number && ((Number) o).intValue() == 0){continue;}
+                        if(o instanceof String && ((String) o).length() == 0){continue;}
+                        if(SafeNBT.tagCompoundClass.isInstance(o)){
+                            SafeNBT s = new SafeNBT(o);
+                            if(s.getKeys().isEmpty()){continue;}
+                        }
+                        if(tagListClass.isInstance(o)){
+                            SafeNBTList s = new SafeNBTList(o);
+                            if(s.isEmpty()){continue;}
+                        }
+                        if(o.getClass().isArray()){
+                            if(Array.getLength(o) == 0){
+                                continue;
+                            }
+                        }
+                        break;
+                    }
+                }
+
+                if(SafeNBT.tagCompoundClass.isInstance(o)){
+                    o = new SafeNBT(o);
+                }
+                else if(tagListClass.isInstance(o)){
+                    o = new SafeNBTList(o);
+                }
+
+                res.add(o);
+            }
+
+            return res;
+        }
+        catch(Exception ex){
+            ex.printStackTrace();
+            return null;
         }
     }
 

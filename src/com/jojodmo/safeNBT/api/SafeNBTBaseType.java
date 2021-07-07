@@ -18,6 +18,7 @@
 
 package com.jojodmo.safeNBT.api;
 
+import com.jojodmo.safeNBT.Main;
 import com.sun.istack.internal.NotNull;
 import org.bukkit.Bukkit;
 
@@ -37,12 +38,19 @@ public enum SafeNBTBaseType{
 
     private Class<?> innerClazz;
     private Class<?> nbtBaseClass;
+    private String name;
 
     <T> SafeNBTBaseType(Class<T> innerClazz, String name){
         try{
             this.innerClazz = innerClazz;
             String version = "net.minecraft.server." + Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-            this.nbtBaseClass = Class.forName(version + ".NBTTag" + name);
+            if(Main.greaterOrEqual(1, 17)){
+                this.nbtBaseClass = Class.forName("net.minecraft.nbt.NBTBase");
+            }
+            else{
+                this.nbtBaseClass = Class.forName(version + ".NBTTag" + name);
+            }
+            this.name = name;
         }
         catch(Exception ex){ex.printStackTrace();}
     }
@@ -57,6 +65,10 @@ public enum SafeNBTBaseType{
         if(clazz == Float.class){return FLOAT;}
         else if(clazz == Integer.class){return INT;}
         return null;
+    }
+
+    public String getName(){
+        return this.name;
     }
 
     public <T> Object make(T value){
